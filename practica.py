@@ -739,24 +739,24 @@ class VentanaGrupo(VentanaBase):
         self.ok(msg)
         self._refrescar()
 
-    # ── Backup / Restaurar ────────────────────
+# ── Backup / Restaurar (VentanaGrupo) ────────────────────
     def _backup(self):
-        exe = _find_mongo_tool("mongoexport")
+        exe = _find_mongo_tool("mongodump")
         if not exe:
             return self.err(
-                "No se encontró 'mongoexport'.\n"
+                "No se encontró 'mongodump'.\n"
                 "Instala MongoDB Database Tools:\n"
                 "https://www.mongodb.com/try/download/database-tools\n"
                 "y agrega la carpeta bin al PATH del sistema."
             )
         try:
-            salida = os.path.join(BACKUP_DIR, "Grupo_backup.json")
+            salida = os.path.join(BACKUP_DIR, "Grupo_backup.bak")
             cmd = [exe,
                    "--host=localhost", "--port=27017",
                    "--username=admin", "--password=root",
                    "--authenticationDatabase=admin",
                    "--db=BD_GrupoAlumno", "--collection=Grupo",
-                   f"--out={salida}"]
+                   f"--archive={salida}"]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 self.ok(f"Backup ejecutado.\n{salida}")
@@ -766,21 +766,21 @@ class VentanaGrupo(VentanaBase):
             self.err(str(e))
 
     def _restaurar_todos(self):
-        ruta = os.path.join(BACKUP_DIR, "Grupo_backup.json")
+        ruta = os.path.join(BACKUP_DIR, "Grupo_backup.bak")
         if not os.path.exists(ruta):
             return self.err(f"No se encontró el backup:\n{ruta}")
-        exe = _find_mongo_tool("mongoimport")
+        exe = _find_mongo_tool("mongorestore")
         if not exe:
-            return self.err("No se encontró 'mongoimport'. Instala MongoDB Database Tools.")
+            return self.err("No se encontró 'mongorestore'. Instala MongoDB Database Tools.")
         if not self.conf("¿Restaurar TODOS los grupos desde el backup?"):
             return
         try:
+            # mongorestore lee directamente la base de datos y colección desde el archivo binario
             cmd = [exe,
                    "--host=localhost", "--port=27017",
                    "--username=admin", "--password=root",
                    "--authenticationDatabase=admin",
-                   "--db=BD_GrupoAlumno", "--collection=Grupo",
-                   f"--file={ruta}"]
+                   f"--archive={ruta}"]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 self.ok("Grupos restaurados correctamente.")
@@ -1109,24 +1109,24 @@ class VentanaAlumno(VentanaBase):
         self.ok(msg)
         self._refrescar()
 
-    # ── Backup / Restaurar ────────────────────
+# ── Backup / Restaurar (VentanaAlumno) ────────────────────
     def _backup(self):
-        exe = _find_mongo_tool("mongoexport")
+        exe = _find_mongo_tool("mongodump")
         if not exe:
             return self.err(
-                "No se encontró 'mongoexport'.\n"
+                "No se encontró 'mongodump'.\n"
                 "Instala MongoDB Database Tools:\n"
                 "https://www.mongodb.com/try/download/database-tools\n"
                 "y agrega la carpeta bin al PATH del sistema."
             )
         try:
-            salida = os.path.join(BACKUP_DIR, "Alumno_backup.json")
+            salida = os.path.join(BACKUP_DIR, "Alumno_backup.bak")
             cmd = [exe,
                    "--host=localhost", "--port=27017",
                    "--username=admin", "--password=root",
                    "--authenticationDatabase=admin",
                    "--db=BD_GrupoAlumno", "--collection=Alumno",
-                   f"--out={salida}"]
+                   f"--archive={salida}"]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 self.ok(f"Backup ejecutado.\n{salida}")
@@ -1136,12 +1136,12 @@ class VentanaAlumno(VentanaBase):
             self.err(str(e))
 
     def _restaurar_todos(self):
-        ruta = os.path.join(BACKUP_DIR, "Alumno_backup.json")
+        ruta = os.path.join(BACKUP_DIR, "Alumno_backup.bak")
         if not os.path.exists(ruta):
             return self.err(f"No se encontró el backup:\n{ruta}")
-        exe = _find_mongo_tool("mongoimport")
+        exe = _find_mongo_tool("mongorestore")
         if not exe:
-            return self.err("No se encontró 'mongoimport'. Instala MongoDB Database Tools.")
+            return self.err("No se encontró 'mongorestore'. Instala MongoDB Database Tools.")
         if not self.conf("¿Restaurar TODOS los alumnos desde el backup?"):
             return
         try:
@@ -1149,8 +1149,7 @@ class VentanaAlumno(VentanaBase):
                    "--host=localhost", "--port=27017",
                    "--username=admin", "--password=root",
                    "--authenticationDatabase=admin",
-                   "--db=BD_GrupoAlumno", "--collection=Alumno",
-                   f"--file={ruta}"]
+                   f"--archive={ruta}"]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 self.ok("Alumnos restaurados correctamente.")
